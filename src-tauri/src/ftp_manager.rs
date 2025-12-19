@@ -10,6 +10,9 @@ pub struct FtpFile {
     pub name: String,
     pub size: u64,
     pub is_directory: bool,
+    pub path: String,
+    pub loading: bool,
+    pub children: Option<Vec<FtpFile>>,
 }
 
 pub struct FtpManager {
@@ -44,29 +47,49 @@ impl FtpManager {
 }
 
     // 2. VERZEICHNIS LISTEN
-    pub fn list_directory(&self, path: &str) -> Result<Vec<FtpFile>, String> {
-        let mut lock = self.stream.lock().map_err(|_| "Mutex Lock Fehler")?;
-        let stream = lock.as_mut().ok_or("Nicht verbunden")?;
+   pub fn list_directory(&self, path: &str) -> Result<Vec<FtpFile>, String> {
+    let mut lock = self.stream.lock().map_err(|_| "Mutex Lock Fehler")?;
+    let stream = lock.as_mut().ok_or("Nicht verbunden")?;
 
-        // Pfad wechseln
-        if !path.is_empty() && path != "/" {
-            stream.cwd(path).map_err(|e| format!("Pfad-Fehler: {}", e))?;
-        }
-
-        let lines = stream.list(None).map_err(|e| e.to_string())?;
-        
-        let file_list = lines.iter().map(|line| {
-            let is_dir = line.starts_with('d');
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            let name = parts.last().unwrap_or(&"unknown").to_string();
-            let size = parts.get(4).unwrap_or(&"0").parse::<u64>().unwrap_or(0);
-
-            FtpFile { name, size, is_directory: is_dir }
-        }).collect();
-
-        Ok(file_list)
+    // In das Verzeichnis wechseln
+    if !path.is_empty() {
+        stream.cwd(path).map_err(|e| format!("Pfad-Fehler: {}", e))?;
     }
 
+    let lines = stream.list(None).map_err(|e| e.to_string())?;
+    
+    let file_list = lines.iter()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| {
+            let is_dir = line.starts_with('d');
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            
+            // Namen sicher extrahieren (Index 8 bis Ende für Leerzeichen in Namen)
+            let name = if parts.len() >= 9 {
+                parts[8..].join(" ")
+            } else {
+                parts.last().unwrap_or(&"unknown").to_string()
+            };
+
+            let size = parts.get(4).unwrap_or(&"0").parse::<u64>().unwrap_or(0);
+
+            // Den absoluten Pfad für das Frontend zusammenbauen
+            // Wichtig: 'path' ist das aktuelle Verzeichnis
+            let clean_path = path.trim_end_matches('/');
+            let full_path = format!("{}/{}", clean_path, name);
+
+            FtpFile { 
+                name, 
+                size, 
+                is_directory: is_dir,
+                path: full_path, // <--- DAS ist dein Key für den Store!
+                loading: false,
+                children: if is_dir { Some(vec![]) } else { None }
+            }
+        }).collect();
+
+    Ok(file_list)
+}
     // 3. DATEI LESEN (Editor oder Media)
     pub fn read_file(&self, path: &str, as_base64: bool) -> Result<String, String> {
         let mut lock = self.stream.lock().map_err(|_| "Mutex Lock Fehler")?;

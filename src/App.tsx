@@ -7,8 +7,14 @@ import { FolderView } from "./views/FolderView";
 import { EditorView } from "./views/EditorView";
 import { MediaView } from "./views/MediaView";
 
+interface FtpFile {
+  name: string;
+  size: number;
+  is_directory: boolean;
+}
+
 export const App = () => {
-  const [nodes, setNodes] = useState([]);
+  const [nodes, setNodes] = useState<FtpFile[]>([]);
   const [currentFiles, setCurrentFiles] = useState([]);
   const [viewMode, setViewMode] = useState<"FOLDER" | "EDITOR" | "MEDIA">(
     "FOLDER"
@@ -29,7 +35,12 @@ export const App = () => {
       });
 
       console.log("Antwort von Rust:", response);
-      // Hier könntest du jetzt zum nächsten Screen navigieren oder die Dateiliste laden
+
+      const list_response: FtpFile[] = await invoke("ftp_list_directory", {
+        path: "/",
+      });
+
+      setNodes(list_response);
     } catch (error) {
       console.error("Fehler beim FTP-Aufruf:", error);
     }

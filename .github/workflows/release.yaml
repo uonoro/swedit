@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - "v*" # Startet den Build, wenn du ein Tag wie v1.0.0 pushst
-
+workflow_dispatch:
 jobs:
   publish-tauri:
     permissions:

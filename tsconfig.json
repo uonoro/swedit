@@ -16,8 +16,8 @@
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false /* handeled by eslint */,
+    "noUnusedParameters": false /* handeled by eslint */,
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],

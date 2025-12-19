@@ -15,11 +15,11 @@ interface FtpFile {
 
 export const App = () => {
   const [nodes, setNodes] = useState<FtpFile[]>([]);
-  const [currentFiles, setCurrentFiles] = useState([]);
+  //const [currentFiles, setCurrentFiles] = useState([]);
   const [viewMode, setViewMode] = useState<"FOLDER" | "EDITOR" | "MEDIA">(
     "FOLDER"
   );
-  const [selectedContent, setSelectedContent] = useState<any>(null);
+  //const [selectedContent, setSelectedContent] = useState<any>(null);
 
   const handleConnect = async (creds: any) => {
     console.log("Starte Verbindung mit:", creds);
@@ -69,9 +69,9 @@ export const App = () => {
           </SplitterPanel>
 
           <SplitterPanel size={75} className="bg-white p-2">
-            {viewMode === "FOLDER" && <FolderView files={currentFiles} />}
-            {viewMode === "EDITOR" && <EditorView content={selectedContent} />}
-            {viewMode === "MEDIA" && <MediaView url={selectedContent} />}
+            {viewMode === "FOLDER" && <FolderView files={[]} />}
+            {viewMode === "EDITOR" && <EditorView content={""} />}
+            {viewMode === "MEDIA" && <MediaView url={""} />}
           </SplitterPanel>
         </Splitter>
       </div>

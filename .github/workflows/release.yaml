@@ -3,8 +3,8 @@ name: "Publish Release"
 on:
   push:
     tags:
-      - "v*" # Startet den Build, wenn du ein Tag wie v1.0.0 pushst
-workflow_dispatch:
+      - "v*" # Startet den Build mit Tag wie v1.0.0
+  workflow_dispatch:
 jobs:
   publish-tauri:
     permissions:
